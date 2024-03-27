@@ -1,29 +1,38 @@
-const router = require('express').Router();
-const store = require('../db/store');
+const express = require('express');
+const router = express.Router();
+const UniqueNoteStore = require('../db/store'); // Import the UniqueNoteStore class
 
-// GET "/api/notes" responds with all notes from the database
-router.get('/notes', (req, res) => {
-  store
-    .getNotes()
-    .then((notes) => {
-      return res.json(notes);
-    })
-    .catch((err) => res.status(500).json(err));
+// Initialize a new instance of the UniqueNoteStore class
+const noteStore = new UniqueNoteStore('../db/db.json');
+
+// Route to get all notes
+router.get('/api/notes', async (req, res) => {
+  try {
+    const notes = await noteStore.getNotes();
+    res.json(notes);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
-router.post('/notes', (req, res) => {
-  store
-    .addNote(req.body)
-    .then((note) => res.json(note))
-    .catch((err) => res.status(500).json(err));
+// Route to add a new note
+router.post('/api/notes', async (req, res) => {
+  try {
+    const note = await noteStore.addNote(req.body);
+    res.json(note);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// DELETE "/api/notes" deletes the note with an id equal to req.params.id
-router.delete('/notes/:id', (req, res) => {
-  store
-    .removeNote(req.params.id)
-    .then(() => res.json({ ok: true }))
-    .catch((err) => res.status(500).json(err));
+// Route to delete a note by ID
+router.delete('/api/notes/:id', async (req, res) => {
+  try {
+    await noteStore.removeNote(req.params.id);
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 module.exports = router;
